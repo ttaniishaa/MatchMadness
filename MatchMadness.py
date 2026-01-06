@@ -147,7 +147,6 @@ class MatchMadness:
         grid_frame = tk.Frame(self.game_frame, bg="pink1")
         grid_frame.pack(side="right", expand=True, fill="both", padx=10, pady=10)
 
-        # Create card button grid
         self.card_buttons = []
         for i in range(self.rows):
             row_buttons = []
@@ -206,17 +205,18 @@ class MatchMadness:
                             command=self.root.destroy)
         quit_btn.pack(side="left", padx=10)
     
+    #Starts a new game with same settings
     def play_again(self):
-        """Start a new game with same settings"""
         self.start_game()
     
+
     def go_to_menu(self):
         """Return to main menu"""
         self.game_frame.pack_forget()
         self.root.geometry("800x600")  # Reset window size
         self.menu.menu_frame.pack(fill="both", expand=True)
 
-
+    #Flips a card when clicked if requirements are met
     def flip_card(self, index, row, col):
             #Don't flip if already matched
             if index in self.matched_cards:
@@ -240,9 +240,10 @@ class MatchMadness:
 
             #If 2 cards are flipped, check for match
             if len(self.flipped_cards) == 2:
-                self.root.after(1000, self.check_match)
+                self.root.after(1000, self.check_match) #Waits 1 second before checking for match
 
 
+    #Checks if 2 flipped cards are a match
     def check_match(self):
         idx1, idx2 = self.flipped_cards
 
@@ -263,7 +264,6 @@ class MatchMadness:
             if len(self.matched_cards) == self.rows * self.cols:
                 self.end_game()
                 return
-            # Player gets to go again on match - don't switch player
         
         else:
             #No match, flip cards back, find buttons and reset them
@@ -286,18 +286,18 @@ class MatchMadness:
         self.p1_score_label.config(text=f"Player 1: {self.scores[1]}")
         self.p2_score_label.config(text=f"Player 2: {self.scores[2]}")
 
+    #Shows end game screen
     def end_game(self):
-        """Show game over screen"""
         self.build_end_screen()
 
 
 
 
-# main menu
+#Main menu
 class MenuFrame:
     def __init__(self, root, game):
         self.root = root
-        self.game = game  # Store reference to the game
+        self.game = game  #Lets menu frame access the game
         self.menu_frame = tk.Frame(root, bg="pink1")
         self.menu_frame.pack(fill="both", expand=True)
         
@@ -309,13 +309,13 @@ class MenuFrame:
         columns_frame = tk.Frame(self.menu_frame, bg="pink1")
         columns_frame.pack(expand=True, fill="both")
         
-        # Configure columns to have equal weight
+        #Configure columns to have equal width
         columns_frame.columnconfigure(0, weight=1)  # Left column
         columns_frame.columnconfigure(1, weight=1)  # Middle column
         columns_frame.columnconfigure(2, weight=1)  # Right column
         columns_frame.rowconfigure(0, weight=1)
         
-        # === LEFT COLUMN (Quit + future Instructions) ===
+        #Left column: quit, rules, play buttons
         left_frame = tk.Frame(columns_frame, bg="pink1")
         left_frame.grid(row=0, column=0, sticky="n", pady=50)
         
@@ -331,7 +331,7 @@ class MenuFrame:
         self.play_btn = tk.Button(left_frame, text="Play!", width=15, bg="PaleVioletRed", fg="white", command=self.play_game)
         self.play_btn.pack(pady=5)
         
-        # === MIDDLE COLUMN (Themes) ===
+        #Middle column: theme selection
         middle_frame = tk.Frame(columns_frame, bg="pink1")
         middle_frame.grid(row=0, column=1, sticky="n", pady=50)
         
@@ -361,7 +361,7 @@ class MenuFrame:
         animals_btn.pack(pady=5)
         self.theme_buttons["Animals"] = animals_btn
         
-        # === RIGHT COLUMN (Difficulty) ===
+        #Right column: difficulty selection
         right_frame = tk.Frame(columns_frame, bg="pink1")
         right_frame.grid(row=0, column=2, sticky="n", pady=50)
         
@@ -371,7 +371,7 @@ class MenuFrame:
         # Difficulty buttons 
         self.difficulty_buttons = {} 
 
-
+        #Difficulty buttons
         easy_btn = tk.Button(right_frame, text="Easy", width=15, bg="PaleVioletRed", fg="white", command=lambda: self.select_difficulty("Easy"))
         easy_btn.pack(pady=5)
         self.difficulty_buttons["Easy"] = easy_btn
@@ -384,7 +384,9 @@ class MenuFrame:
         hard_btn.pack(pady=5)
         self.difficulty_buttons["Hard"] = hard_btn 
 
-        #Rules 
+
+
+    #Shows rules in messagebox
     def show_rules(self):
         messagebox.showinfo("Rules",  "How to Play Match Madness:\n\n"
     "1. Player 1 clicks on a card to flip it\n"
@@ -394,39 +396,43 @@ class MenuFrame:
     "5. If Player 1 got a match, they may go again until they miss. If not, it's Player 2's turn\n"
     "6. Find the most pairs to win!")
 
+    #Selects a theme when theme button is clicked
     def select_theme(self, theme):
-        """Called when a theme button is clicked"""
         self.game.selected_theme = theme
         
-        # Update button colors - highlight selected, unhighlight others
+        # Updates button colors (highlight selected, unhighlight others)
         for theme_name, btn in self.theme_buttons.items():
             if theme_name == theme:
-                btn.config(bg="deeppink4")  # Selected: darker color
+                btn.config(bg="deeppink4")
             else:
-                btn.config(bg="PaleVioletRed")  # Not selected: normal color
+                btn.config(bg="PaleVioletRed")  
         
-        self.update_play_button()  # Check if Play button should turn green
+        self.update_play_button()  #Checks if play button should turn green (both theme and difficulty are selected)
 
+
+    #Selects a difficulty when difficulty button is clicked
     def select_difficulty(self, difficulty):
-        """Called when a difficulty button is clicked"""
         self.game.selected_difficulty = difficulty
 
-        # Update button colors - highlight selected, unhighlight others
+        # Update button colors
         for diff_name, btn in self.difficulty_buttons.items():
             if diff_name == difficulty:
                 btn.config(bg="deeppink4")
             else:
                 btn.config(bg="PaleVioletRed")
         
-        self.update_play_button()  # Check if Play button should turn green
+        self.update_play_button() #Checks if play button should turn green
 
+
+    #Turns play button green when both theme and difficulty are selected
     def update_play_button(self):
-        """Turn Play button green when both theme and difficulty are selected"""
         if self.game.selected_theme is not None and self.game.selected_difficulty is not None:
             self.play_btn.config(bg="PaleGreen3")
         else:
             self.play_btn.config(bg="PaleVioletRed")
 
+
+    #
     def play_game(self):
         if self.game.selected_difficulty is None and self.game.selected_theme is None:
             messagebox.showwarning("Missing selections", "Please select a theme and difficulty level")
