@@ -149,11 +149,11 @@ class MatchMadness:
         grid_frame.pack(side="right", expand=True, fill="both", padx=10, pady=10)
 
         self.card_buttons = []
-        for i in range(self.rows):
+        for i in range(self.rows): # setting up rows from user input
             row_buttons = []
-            for j in range(self.cols):
+            for j in range(self.cols): # setting up columns from user input
                 card_index = i * self.cols + j
-                btn = tk.Button(grid_frame, text="?", width=8, height=4,
+                btn = tk.Button(grid_frame, text="?", width=8, height=4, # unknown card
                                bg="PaleVioletRed", fg="white", font=("Arial", 12, "bold"),
                                activebackground="PaleVioletRed", activeforeground="white",
                                command=lambda idx=card_index, r=i, c=j: self.flip_card(idx, r, c))
@@ -175,6 +175,7 @@ class MatchMadness:
         else:
             winner_text = "It's a Tie!"
 
+        # Game over screen
         title = tk.Label(self.game_frame, text="Game Over!", font=("Arial", 28, "bold"), bg="pink1", fg="deeppink4")
         title.pack(pady=30)
 
@@ -342,21 +343,24 @@ class MenuFrame:
         #Theme buttons 
         self.theme_buttons = {}
 
+        # Food
         food_btn = tk.Button(middle_frame, text="Food", width=15, bg="PaleVioletRed", fg="white",
                             command=lambda: self.select_theme("Food"))
         food_btn.pack(pady=5)
         self.theme_buttons["Food"] = food_btn
 
+        # Nature
         nature_btn = tk.Button(middle_frame, text="Nature", width=15, bg="PaleVioletRed", fg="white",
                               command=lambda: self.select_theme("Nature"))
         nature_btn.pack(pady=5)
         self.theme_buttons["Nature"] = nature_btn
 
+        # Flags
         flags_btn = tk.Button(middle_frame, text="Flags", width=15, bg="PaleVioletRed", fg="white",
                             command=lambda: self.select_theme("Flags"))
         flags_btn.pack(pady=5)
         self.theme_buttons["Flags"] = flags_btn
-
+        # Animals
         animals_btn = tk.Button(middle_frame, text="Animals", width=15, bg="PaleVioletRed", fg="white",
                             command=lambda: self.select_theme("Animals"))
         animals_btn.pack(pady=5)
