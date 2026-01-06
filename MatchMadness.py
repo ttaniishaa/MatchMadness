@@ -14,6 +14,7 @@ from PIL import Image, ImageTk
 import os 
 
 
+# grid size depending on difficulty of game
 DIFFICULTIES = {
 "Easy": (3,4), #
 "Medium": (4,4),
