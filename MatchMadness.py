@@ -30,7 +30,7 @@ DIFFICULTIES = {
 "Hard": (5,6)
 }
 
-CARD_SIZE = (100,100)
+CARD_SIZE = (90,90)
 PADDING = 6 #Padding / space between cards
 
 
@@ -60,7 +60,9 @@ class MatchMadness:
         self.root = root
         self.root.title("Match Madness")
         self.root.geometry("800x600")
-        self.root.config(bg="LightPink1")
+        self.root.config(bg="pink1")
+        self.selected_difficulty = None  # No default - player must select
+        self.selected_theme = None  # No default - player must select
     
     #Screens
         self.menu_frame = tk.Frame(root)
@@ -70,20 +72,123 @@ class MatchMadness:
 # instructions
 
 
-    def start_game(self, theme):
-        # Use correct folder path (Cards with capital C)
-        folder = f"Cards/{theme}"
+    def start_game(self):
+
+        rows, cols = DIFFICULTIES[self.selected_difficulty]
+        num_pairs = (rows*cols) // 2 
+
+        folder = f"Cards/{self.selected_theme}"
         image_paths = list_image_files(folder)
         
-        # Load the images
-        self.card_images = [load_photo(path) for path in image_paths]
+        selected_paths = image_paths[:num_pairs]
+        card_paths = selected_paths * 2 
+        random.shuffle(card_paths)
+
+        self.card_images = [load_photo(path) for path in card_paths]
+
+        self.rows = rows
+        self.cols = cols
+        self.card_paths = card_paths
+        self.current_player = 1 
+        self.scores = {1:0, 2:0} 
+
+        self.flipped_cards = []
+        self.matched_cards = [] 
+        
+
+        
+        # Resize window based on difficulty
+        if self.selected_difficulty == "Easy":
+            self.root.geometry("800x550")
+        elif self.selected_difficulty == "Medium":
+            self.root.geometry("900x650")
+        else:  # Hard
+            self.root.geometry("1100x750")
         
         # Hide menu, show game
         self.menu.menu_frame.pack_forget()
-        self.game_frame.pack(expand=True)
+        self.game_frame.config(bg="pink1")
+        self.game_frame.pack(expand=True, fill="both")
+
+        self.build_game_screen()
+
+
         
-        # TODO: Create the card grid and game logic
-        print(f"Loaded {len(self.card_images)} images from {folder}")
+
+    def build_game_screen(self):
+        #Clears existing buttons, text, etc
+        for widget in self.game_frame.winfo_children():
+            widget.destroy() 
+        
+        #Left sidebar
+        sidebar = tk.Frame(self.game_frame, bg="pink1", width=200)
+        sidebar.pack(side="left", fill="y", padx=10, pady=10)
+        sidebar.pack_propagate(False)
+        
+        title = tk.Label(sidebar, text="Match Madness", font=("Arial", 16, "bold"), bg="pink1", fg="deeppink4")
+        title.pack(pady=10)
+
+        info_label = tk.Label(sidebar, text=f"Theme: {self.selected_theme} \nDifficulty: {self.selected_difficulty}", font = ("Arial", 10), bg="pink1", fg="deeppink4")
+        info_label.pack(pady=5)
+
+        #Turn indicator
+        self.turn_label = tk.Label(sidebar, text="Player 1's turn", font=("Arial", 14, "bold"), bg="pink1", fg="deeppink4")
+        self.turn_label.pack(pady=15)
+
+        #Scores 
+        self.p1_score_label = tk.Label(sidebar, text="Player 1: 0", font=("Arial", 12), bg="pink1", fg="deeppink4")
+        self.p1_score_label.pack(pady=5)
+        
+        self.p2_score_label = tk.Label(sidebar, text="Player 2: 0", font=("Arial", 12), bg="pink1", fg="deeppink4")
+        self.p2_score_label.pack(pady=5)
+
+        #Rules and quit buttons
+        rules_btn = tk.Button(sidebar, text="Rules", width=12,bg="PaleVioletRed", fg="white", command=self.menu.show_rules)
+        rules_btn.pack(pady=10)
+
+        quit_btn = tk.Button(sidebar, text="Quit", width=12,bg="indian red", fg="white", command=self.root.destroy)
+        quit_btn.pack(pady=5)
+
+
+        #Card grid 
+        grid_frame = tk.Frame(self.game_frame, bg="pink1")
+        grid_frame.pack(side="right", expand=True, fill="both", padx=10, pady=10)
+
+        self.card_buttons = []
+        for i in range(self.rows):
+            row_buttons = []
+            for j in range(self.cols):
+                card_index = i * self.cols + j #Calculates which card this is 
+                btn = tk.Button(grid_frame, text="?", width=8, height=4,
+                               bg="PaleVioletRed", fg="white", font=("Arial", 12, "bold"), command=lambda idx= card_index, r=i, c=j: self.flip_card(idx,r,c))
+                btn.grid(row=i, column=j, padx=PADDING, pady=PADDING)
+                row_buttons.append(btn)
+            self.card_buttons.append(row_buttons)
+
+
+    def flip_card(self, index, row, col):
+            #Don't flip if already matched
+            if index in self.matched_cards:
+                return
+            
+            #Don't flip if already flipped
+            if index in self.flipped_cards:
+                return
+
+            #Don't flip if 2 cards are already flipped
+            if len(self.flipped_cards) >= 2:
+                return 
+
+            #Show image
+            btn = self.card_buttons[row][col]
+            btn.config(image=self.card_images[index], width = 90, height = 90)
+
+            #Add to flipped cards
+            self.flipped_cards.append(index)
+
+            #If 2 cards are flipped, check for match
+            if len(self.flipped_cards) == 2:
+                self.root.afer(1000, self.check_match)
 
 
 # main menu
@@ -91,15 +196,15 @@ class MenuFrame:
     def __init__(self, root, game):
         self.root = root
         self.game = game  # Store reference to the game
-        self.menu_frame = tk.Frame(root, bg="LightPink1")
+        self.menu_frame = tk.Frame(root, bg="pink1")
         self.menu_frame.pack(fill="both", expand=True)
         
         # Title at top
-        title_label = tk.Label(self.menu_frame, text="Match Madness", font=("Arial", 32, "bold"), bg="LightPink1", fg="deeppink4")
+        title_label = tk.Label(self.menu_frame, text="Match Madness", font=("Arial", 32, "bold"), bg="pink1", fg="deeppink4")
         title_label.pack(pady=10, anchor="n")
         
         # Container for the three columns
-        columns_frame = tk.Frame(self.menu_frame, bg="LightPink1")
+        columns_frame = tk.Frame(self.menu_frame, bg="pink1")
         columns_frame.pack(expand=True, fill="both")
         
         # Configure columns to have equal weight
@@ -109,60 +214,73 @@ class MenuFrame:
         columns_frame.rowconfigure(0, weight=1)
         
         # === LEFT COLUMN (Quit + future Instructions) ===
-        left_frame = tk.Frame(columns_frame, bg="LightPink1")
+        left_frame = tk.Frame(columns_frame, bg="pink1")
         left_frame.grid(row=0, column=0, sticky="n", pady=50)
         
-        controls_label = tk.Label(left_frame, text="Controls:", font=("Arial", 14), bg="LightPink1", fg="deeppink4")
+        controls_label = tk.Label(left_frame, text="Controls:", font=("Arial", 14), bg="pink1", fg="deeppink4")
         controls_label.pack(pady=10)
         
-        quit_btn = tk.Button(left_frame, text="Quit", width=15, bg="PaleVioletRed", fg="white", command=root.destroy)
+        quit_btn = tk.Button(left_frame, text="Quit", width=15, bg="indian red", fg="white", command=root.destroy)
         quit_btn.pack(pady=5)
 
         rules_btn = tk.Button(left_frame, text="Rules", width=15, bg="PaleVioletRed", fg="white", command=self.show_rules)
         rules_btn.pack(pady=5)
-        
-        # Instructions button will go here later
+
+        self.play_btn = tk.Button(left_frame, text="Play!", width=15, bg="PaleVioletRed", fg="white", command=self.play_game)
+        self.play_btn.pack(pady=5)
         
         # === MIDDLE COLUMN (Themes) ===
-        middle_frame = tk.Frame(columns_frame, bg="LightPink1")
+        middle_frame = tk.Frame(columns_frame, bg="pink1")
         middle_frame.grid(row=0, column=1, sticky="n", pady=50)
         
-        theme_label = tk.Label(middle_frame, text="Select Theme:", font=("Arial", 14), bg="LightPink1", fg="deeppink4")
+        theme_label = tk.Label(middle_frame, text="Select Theme:", font=("Arial", 14), bg="pink1", fg="deeppink4")
         theme_label.pack(pady=10)
         
+        #Theme buttons 
+        self.theme_buttons = {}
+
         food_btn = tk.Button(middle_frame, text="Food", width=15, bg="PaleVioletRed", fg="white",
-                            command=lambda: self.game.start_game("Food"))
+                            command=lambda: self.select_theme("Food"))
         food_btn.pack(pady=5)
-        
+        self.theme_buttons["Food"] = food_btn
+
         nature_btn = tk.Button(middle_frame, text="Nature", width=15, bg="PaleVioletRed", fg="white",
-                              command=lambda: self.game.start_game("Nature"))
+                              command=lambda: self.select_theme("Nature"))
         nature_btn.pack(pady=5)
+        self.theme_buttons["Nature"] = nature_btn
 
         flags_btn = tk.Button(middle_frame, text="Flags", width=15, bg="PaleVioletRed", fg="white",
-                            command=lambda: self.game.start_game("Flags"))
+                            command=lambda: self.select_theme("Flags"))
         flags_btn.pack(pady=5)
+        self.theme_buttons["Flags"] = flags_btn
 
         animals_btn = tk.Button(middle_frame, text="Animals", width=15, bg="PaleVioletRed", fg="white",
-                            command=lambda: self.game.start_game("Animals"))
+                            command=lambda: self.select_theme("Animals"))
         animals_btn.pack(pady=5)
+        self.theme_buttons["Animals"] = animals_btn
         
         # === RIGHT COLUMN (Difficulty) ===
-        right_frame = tk.Frame(columns_frame, bg="LightPink1")
+        right_frame = tk.Frame(columns_frame, bg="pink1")
         right_frame.grid(row=0, column=2, sticky="n", pady=50)
         
-        diff_label = tk.Label(right_frame, text="Select Difficulty:", font=("Arial", 14), bg="LightPink1", fg="deeppink4")
+        diff_label = tk.Label(right_frame, text="Select Difficulty:", font=("Arial", 14), bg="pink1", fg="deeppink4")
         diff_label.pack(pady=10)
         
-        # Difficulty buttons placeholder (not implemented yet)
-        easy_btn = tk.Button(right_frame, text="Easy", width=15, bg="PaleVioletRed", fg="white")
-        easy_btn.pack(pady=5)
-        
-        medium_btn = tk.Button(right_frame, text="Medium", width=15, bg="PaleVioletRed", fg="white")
-        medium_btn.pack(pady=5)
-        
-        hard_btn = tk.Button(right_frame, text="Hard", width=15, bg="PaleVioletRed", fg="white")
-        hard_btn.pack(pady=5)
+        # Difficulty buttons 
+        self.difficulty_buttons = {} 
 
+
+        easy_btn = tk.Button(right_frame, text="Easy", width=15, bg="PaleVioletRed", fg="white", command=lambda: self.select_difficulty("Easy"))
+        easy_btn.pack(pady=5)
+        self.difficulty_buttons["Easy"] = easy_btn
+
+        medium_btn = tk.Button(right_frame, text="Medium", width=15, bg="PaleVioletRed", fg="white", command=lambda: self.select_difficulty("Medium"))
+        medium_btn.pack(pady=5)
+        self.difficulty_buttons["Medium"] = medium_btn
+
+        hard_btn = tk.Button(right_frame, text="Hard", width=15, bg="PaleVioletRed", fg="white", command=lambda: self.select_difficulty("Hard"))
+        hard_btn.pack(pady=5)
+        self.difficulty_buttons["Hard"] = hard_btn 
 
         #Rules 
     def show_rules(self):
@@ -173,9 +291,49 @@ class MenuFrame:
     "4. If not, they flip back over\n"
     "5. If Player 1 got a match, they may go again until they miss. If not, it's Player 2's turn\n"
     "6. Find the most pairs to win!")
+
+    def select_theme(self, theme):
+        """Called when a theme button is clicked"""
+        self.game.selected_theme = theme
         
-    # transition to the game screen
-    
+        # Update button colors - highlight selected, unhighlight others
+        for theme_name, btn in self.theme_buttons.items():
+            if theme_name == theme:
+                btn.config(bg="deeppink4")  # Selected: darker color
+            else:
+                btn.config(bg="PaleVioletRed")  # Not selected: normal color
+        
+        self.update_play_button()  # Check if Play button should turn green
+
+    def select_difficulty(self, difficulty):
+        """Called when a difficulty button is clicked"""
+        self.game.selected_difficulty = difficulty
+
+        # Update button colors - highlight selected, unhighlight others
+        for diff_name, btn in self.difficulty_buttons.items():
+            if diff_name == difficulty:
+                btn.config(bg="deeppink4")
+            else:
+                btn.config(bg="PaleVioletRed")
+        
+        self.update_play_button()  # Check if Play button should turn green
+
+    def update_play_button(self):
+        """Turn Play button green when both theme and difficulty are selected"""
+        if self.game.selected_theme is not None and self.game.selected_difficulty is not None:
+            self.play_btn.config(bg="PaleGreen3")
+        else:
+            self.play_btn.config(bg="PaleVioletRed")
+
+    def play_game(self):
+        if self.game.selected_difficulty is None and self.game.selected_theme is None:
+            messagebox.showwarning("Missing selections", "Please select a theme and difficulty level")
+        elif self.game.selected_difficulty is None:
+            messagebox.showwarning("Missing difficulty", "Please select a difficulty level")
+        elif self.game.selected_theme is None:
+            messagebox.showwarning("Missing theme", "Please select a theme")
+        else:
+            self.game.start_game()
 
 # game screen
     # displaying the images
