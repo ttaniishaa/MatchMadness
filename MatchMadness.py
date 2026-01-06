@@ -432,7 +432,7 @@ class MenuFrame:
             self.play_btn.config(bg="PaleVioletRed")
 
 
-    #
+    # Starting the game, check for missing inputs
     def play_game(self):
         if self.game.selected_difficulty is None and self.game.selected_theme is None:
             messagebox.showwarning("Missing selections", "Please select a theme and difficulty level")
