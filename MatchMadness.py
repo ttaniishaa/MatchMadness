@@ -136,11 +136,14 @@ class MatchMadness:
         self.turn_label.pack(pady=15)
 
         #Scores 
+        scores_title = tk.Label(sidebar, text="Scores:", font=("Arial", 12, "bold"), bg="pink1", fg="deeppink4")
+        scores_title.pack(pady=(10, 5))
+        
         self.p1_score_label = tk.Label(sidebar, text="Player 1: 0", font=("Arial", 12), bg="pink1", fg="deeppink4")
-        self.p1_score_label.pack(pady=5)
+        self.p1_score_label.pack(pady=2)
         
         self.p2_score_label = tk.Label(sidebar, text="Player 2: 0", font=("Arial", 12), bg="pink1", fg="deeppink4")
-        self.p2_score_label.pack(pady=5)
+        self.p2_score_label.pack(pady=2)
 
         #Rules and quit buttons
         rules_btn = tk.Button(sidebar, text="Rules", width=12,bg="PaleVioletRed", fg="white", command=self.menu.show_rules)
@@ -148,7 +151,6 @@ class MatchMadness:
 
         quit_btn = tk.Button(sidebar, text="Quit", width=12,bg="indian red", fg="white", command=self.root.destroy)
         quit_btn.pack(pady=5)
-
 
         #Card grid 
         grid_frame = tk.Frame(self.game_frame, bg="pink1")
@@ -158,12 +160,69 @@ class MatchMadness:
         for i in range(self.rows):
             row_buttons = []
             for j in range(self.cols):
-                card_index = i * self.cols + j #Calculates which card this is 
+                card_index = i * self.cols + j
                 btn = tk.Button(grid_frame, text="?", width=8, height=4,
-                               bg="PaleVioletRed", fg="white", font=("Arial", 12, "bold"), command=lambda idx= card_index, r=i, c=j: self.flip_card(idx,r,c))
+                               bg="PaleVioletRed", fg="white", font=("Arial", 12, "bold"),
+                               activebackground="PaleVioletRed", activeforeground="white",
+                               command=lambda idx=card_index, r=i, c=j: self.flip_card(idx, r, c))
                 btn.grid(row=i, column=j, padx=PADDING, pady=PADDING)
                 row_buttons.append(btn)
             self.card_buttons.append(row_buttons)
+
+
+    def build_end_screen(self):
+        #Clears existing buttons, text, etc
+        for widget in self.game_frame.winfo_children():
+            widget.destroy() 
+
+        #Determine winner 
+        if self.scores[1] > self.scores[2]:
+            winner_text = "Player 1 Wins!"
+        elif self.scores[2] > self.scores[1]:
+            winner_text = "Player 2 Wins!"
+        else:
+            winner_text = "It's a Tie!"
+
+        title = tk.Label(self.game_frame, text="Game Over!", font=("Arial", 28, "bold"), bg="pink1", fg="deeppink4")
+        title.pack(pady=30)
+
+        # Winner
+        winner_label = tk.Label(self.game_frame, text=winner_text, font=("Arial", 20), bg="pink1", fg="deeppink4")
+        winner_label.pack(pady=10)
+        
+        # Final scores
+        scores_label = tk.Label(self.game_frame, text=f"Final Scores:\nPlayer 1: {self.scores[1]}\nPlayer 2: {self.scores[2]}", 
+                               font=("Arial", 14), bg="pink1", fg="deeppink4")
+        scores_label.pack(pady=20)
+        
+        # Buttons frame
+        btn_frame = tk.Frame(self.game_frame, bg="pink1")
+        btn_frame.pack(pady=20)
+        
+        # Play Again button
+        play_again_btn = tk.Button(btn_frame, text="Play Again", width=12, bg="PaleGreen3", fg="white",
+                                   command=self.play_again)
+        play_again_btn.pack(side="left", padx=10)
+        
+        # Main Menu button
+        menu_btn = tk.Button(btn_frame, text="Main Menu", width=12, bg="PaleVioletRed", fg="white",
+                            command=self.go_to_menu)
+        menu_btn.pack(side="left", padx=10)
+        
+        # Quit button
+        quit_btn = tk.Button(btn_frame, text="Quit", width=12, bg="indian red", fg="white",
+                            command=self.root.destroy)
+        quit_btn.pack(side="left", padx=10)
+    
+    def play_again(self):
+        """Start a new game with same settings"""
+        self.start_game()
+    
+    def go_to_menu(self):
+        """Return to main menu"""
+        self.game_frame.pack_forget()
+        self.root.geometry("800x600")  # Reset window size
+        self.menu.menu_frame.pack(fill="both", expand=True)
 
 
     def flip_card(self, index, row, col):
@@ -181,14 +240,65 @@ class MatchMadness:
 
             #Show image
             btn = self.card_buttons[row][col]
-            btn.config(image=self.card_images[index], width = 90, height = 90)
+            btn.config(image=self.card_images[index], text="", width=90, height=90,
+                      activebackground="pink1")
 
             #Add to flipped cards
             self.flipped_cards.append(index)
 
             #If 2 cards are flipped, check for match
             if len(self.flipped_cards) == 2:
-                self.root.afer(1000, self.check_match)
+                self.root.after(1000, self.check_match)
+
+
+    def check_match(self):
+        idx1, idx2 = self.flipped_cards
+
+        #Get image paths to compare 
+        path1 = self.card_paths[idx1]
+        path2 = self.card_paths[idx2]
+
+        #Keep cards face up (match)
+        if path1 == path2:
+            self.matched_cards.append(idx1)
+            self.matched_cards.append(idx2)
+            
+            #Add point to current player 
+            self.scores[self.current_player] += 1
+            self.update_scores()
+
+            #Check if game is over
+            if len(self.matched_cards) == self.rows * self.cols:
+                self.end_game()
+                return
+            # Player gets to go again on match - don't switch player
+        
+        else:
+            #No match, flip cards back, find buttons and reset them
+            for idx in self.flipped_cards:
+                row = idx // self.cols
+                col = idx % self.cols 
+                btn = self.card_buttons[row][col]
+                btn.config(image="", text="?", width=8, height=4, 
+                          bg="PaleVioletRed", fg="white",
+                          activebackground="PaleVioletRed", activeforeground="white")
+
+            #Switch player only on no match
+            self.current_player = 2 if self.current_player == 1 else 1 
+            self.turn_label.config(text=f"Player {self.current_player}'s turn")
+
+        #Clear flipped cards for next turn
+        self.flipped_cards = []
+
+    def update_scores(self):
+        self.p1_score_label.config(text=f"Player 1: {self.scores[1]}")
+        self.p2_score_label.config(text=f"Player 2: {self.scores[2]}")
+
+    def end_game(self):
+        """Show game over screen"""
+        self.build_end_screen()
+
+
 
 
 # main menu
@@ -335,13 +445,6 @@ class MenuFrame:
         else:
             self.game.start_game()
 
-# game screen
-    # displaying the images
-    
-    # alternating player turns
-    
-    # score system
-    
     
 # end screen
     # end + winner screen
