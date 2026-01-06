@@ -14,16 +14,6 @@ from PIL import Image, ImageTk
 import os 
 
 
-
-# cards
-# animals
-# food
-# flags
-# nature
-
-#Constants
-
-  
 DIFFICULTIES = {
 "Easy": (3,4), #
 "Medium": (4,4),
@@ -31,7 +21,7 @@ DIFFICULTIES = {
 }
 
 CARD_SIZE = (90,90)
-PADDING = 6 #Padding / space between cards
+PADDING = 6 #Space between cards
 
 
 #Helper functions
@@ -43,9 +33,9 @@ def load_photo(path, size=CARD_SIZE):
     return ImageTk.PhotoImage(img)
 
 
-#Returns a list of full paths
+#Returns a list of full paths for images in cards folder
 def list_image_files(folder: str):
-    endings = (".png", ".jpg", ".jpeg") #valid file endings
+    endings = (".png", ".jpg") #valid file endings
     files = []
     for name in os.listdir(folder):
         if name.lower().endswith(endings):
@@ -61,27 +51,26 @@ class MatchMadness:
         self.root.title("Match Madness")
         self.root.geometry("800x600")
         self.root.config(bg="pink1")
-        self.selected_difficulty = None  # No default - player must select
-        self.selected_theme = None  # No default - player must select
+        self.selected_difficulty = None 
+        self.selected_theme = None  
     
     #Screens
-        self.menu_frame = tk.Frame(root)
         self.game_frame = tk.Frame(root)
-
         self.menu = MenuFrame(root, self)
-# instructions
 
 
+    #Starts the game with selected difficulty and theme
     def start_game(self):
 
         rows, cols = DIFFICULTIES[self.selected_difficulty]
         num_pairs = (rows*cols) // 2 
 
+        #Get image paths from selected theme
         folder = f"Cards/{self.selected_theme}"
         image_paths = list_image_files(folder)
-        
-        selected_paths = image_paths[:num_pairs]
-        card_paths = selected_paths * 2 
+        selected_paths = image_paths[:num_pairs] #Only uses the necessary number of images
+
+        card_paths = selected_paths * 2 #Each image appears twice
         random.shuffle(card_paths)
 
         self.card_images = [load_photo(path) for path in card_paths]
@@ -97,15 +86,15 @@ class MatchMadness:
         
 
         
-        # Resize window based on difficulty
+        # Resize window based on difficulty to avoid cards being cut off 
         if self.selected_difficulty == "Easy":
             self.root.geometry("800x550")
         elif self.selected_difficulty == "Medium":
             self.root.geometry("900x650")
-        else:  # Hard
+        else: 
             self.root.geometry("1100x750")
         
-        # Hide menu, show game
+        # Hide menu & show game
         self.menu.menu_frame.pack_forget()
         self.game_frame.config(bg="pink1")
         self.game_frame.pack(expand=True, fill="both")
@@ -135,7 +124,7 @@ class MatchMadness:
         self.turn_label = tk.Label(sidebar, text="Player 1's turn", font=("Arial", 14, "bold"), bg="pink1", fg="deeppink4")
         self.turn_label.pack(pady=15)
 
-        #Scores 
+        #Scores (updated when match is found)
         scores_title = tk.Label(sidebar, text="Scores:", font=("Arial", 12, "bold"), bg="pink1", fg="deeppink4")
         scores_title.pack(pady=(10, 5))
         
@@ -152,10 +141,13 @@ class MatchMadness:
         quit_btn = tk.Button(sidebar, text="Quit", width=12,bg="indian red", fg="white", command=self.root.destroy)
         quit_btn.pack(pady=5)
 
+
         #Card grid 
+
         grid_frame = tk.Frame(self.game_frame, bg="pink1")
         grid_frame.pack(side="right", expand=True, fill="both", padx=10, pady=10)
 
+        # Create card button grid
         self.card_buttons = []
         for i in range(self.rows):
             row_buttons = []
