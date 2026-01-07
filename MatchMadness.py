@@ -12,7 +12,8 @@ from tkinter import messagebox
 import random
 from PIL import Image, ImageTk
 import os 
-
+import mp3play
+from playsound import playsound
 
 # grid size depending on difficulty of game
 DIFFICULTIES = {
@@ -26,7 +27,14 @@ PADDING = 6 #Space between cards
 
 
 #Helper functions
-
+# Sound effects
+def happy_sound():
+    playsound('Children Yay Sound Effect (HD) 4.mp3')
+def sad_sound():
+    playsound('Sad Trombone - Sound Effect (HD).mp3')
+def applause_sound():
+    playsound('Applause  Sound Effect 4.mp3')
+    
 #Loads and resizes an image file into a Tkinter PhotoImage
 def load_photo(path, size=CARD_SIZE):
     img = Image.open(path).convert("RGB")
