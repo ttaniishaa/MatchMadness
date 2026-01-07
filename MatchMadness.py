@@ -12,7 +12,6 @@ from tkinter import messagebox
 import random
 from PIL import Image, ImageTk
 import os 
-import mp3play
 from playsound import playsound
 
 # grid size depending on difficulty of game
@@ -25,22 +24,17 @@ DIFFICULTIES = {
 CARD_SIZE = (90,90)
 PADDING = 6 #Space between cards
 
-
 #Helper functions
 # Sound effects
-def happy_sound():
-    playsound('Children Yay Sound Effect (HD) 4.mp3')
-def sad_sound():
-    playsound('Sad Trombone - Sound Effect (HD).mp3')
-def applause_sound():
-    playsound('Applause  Sound Effect 4.mp3')
-    
+happy_sound = "/Users/angela/MatchMadness/MatchMadness/sound_effects/happy.mp3"
+sad_sound = "/Users/angela/MatchMadness/MatchMadness/sound_effects/sad.mp3"
+applause_sound = "/Users/angela/MatchMadness/MatchMadness/sound_effects/applause.mp3"
+
 #Loads and resizes an image file into a Tkinter PhotoImage
 def load_photo(path, size=CARD_SIZE):
     img = Image.open(path).convert("RGB")
     img = img.resize(size, Image.Resampling.LANCZOS)
     return ImageTk.PhotoImage(img)
-
 
 #Returns a list of full paths for images in cards folder
 def list_image_files(folder: str):
@@ -51,7 +45,6 @@ def list_image_files(folder: str):
             files.append(os.path.join(folder, name))
     files.sort()
     return files
-  
 
 #Controls Match Madness Game 
 class MatchMadness:
@@ -110,8 +103,6 @@ class MatchMadness:
 
         self.build_game_screen()
 
-
-        
 
     def build_game_screen(self):
         #Clears existing buttons, text, etc
@@ -263,6 +254,7 @@ class MatchMadness:
 
         #Keep cards face up (match)
         if path1 == path2:
+            playsound(happy_sound, block=False)
             self.matched_cards.append(idx1)
             self.matched_cards.append(idx2)
             
@@ -277,6 +269,7 @@ class MatchMadness:
         
         else:
             #No match, flip cards back, find buttons and reset them
+            playsound(sad_sound, block=False)
             for idx in self.flipped_cards:
                 row = idx // self.cols
                 col = idx % self.cols 
