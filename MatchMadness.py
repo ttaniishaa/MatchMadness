@@ -12,7 +12,7 @@ from tkinter import messagebox
 import random
 from PIL import Image, ImageTk
 import os 
-from playsound import playsound
+import platform
 
 # grid size depending on difficulty of game
 DIFFICULTIES = {
@@ -26,9 +26,20 @@ PADDING = 6 #Space between cards
 
 #Helper functions
 # Sound effects
-happy_sound = "/Users/angela/MatchMadness/MatchMadness/sound_effects/happy.mp3"
-sad_sound = "/Users/angela/MatchMadness/MatchMadness/sound_effects/sad.mp3"
-applause_sound = "/Users/angela/MatchMadness/MatchMadness/sound_effects/applause.mp3"
+# Get the folder where your script is located
+BASE_DIR = os.path.dirname(__file__)
+
+# Define paths for your specific sounds
+happy_sound = os.path.join(BASE_DIR, "sound_effects","happy.wav")
+sad_sound = os.path.join(BASE_DIR, "sound_effects","sad.wav")
+applause_sound = os.path.join(BASE_DIR, "sound_effects","applause.wav")
+
+def play_audio(file_path):
+    if platform.system() == "Darwin": # Mac
+        os.system(f"afplay '{file_path}' &")
+    elif platform.system() == "Windows": # Windows
+        import winsound
+        winsound.PlaySound(file_path, winsound.SND_FILENAME | winsound.SND_ASYNC) # passing file quickly
 
 #Loads and resizes an image file into a Tkinter PhotoImage
 def load_photo(path, size=CARD_SIZE):
@@ -48,6 +59,7 @@ def list_image_files(folder: str):
 
 #Controls Match Madness Game 
 class MatchMadness:
+    # Window Setup
     def __init__(self, root):
         self.root = root
         self.root.title("Match Madness")
@@ -85,8 +97,6 @@ class MatchMadness:
 
         self.flipped_cards = []
         self.matched_cards = [] 
-        
-
         
         # Resize window based on difficulty to avoid cards being cut off 
         if self.selected_difficulty == "Easy":
@@ -141,9 +151,7 @@ class MatchMadness:
         quit_btn = tk.Button(sidebar, text="Quit", width=12,bg="indian red", fg="white", command=self.root.destroy)
         quit_btn.pack(pady=5)
 
-
         #Card grid 
-
         grid_frame = tk.Frame(self.game_frame, bg="pink1")
         grid_frame.pack(side="right", expand=True, fill="both", padx=10, pady=10)
 
@@ -153,13 +161,12 @@ class MatchMadness:
             for j in range(self.cols): # setting up columns from user input
                 card_index = i * self.cols + j
                 btn = tk.Button(grid_frame, text="?", width=8, height=4, # unknown card
-                               bg="PaleVioletRed", fg="white", font=("Arial", 12, "bold"),
-                               activebackground="PaleVioletRed", activeforeground="white",
-                               command=lambda idx=card_index, r=i, c=j: self.flip_card(idx, r, c))
+                    bg="PaleVioletRed", fg="white", font=("Arial", 12, "bold"),
+                    activebackground="PaleVioletRed", activeforeground="white",
+                    command=lambda idx=card_index, r=i, c=j: self.flip_card(idx, r, c))
                 btn.grid(row=i, column=j, padx=PADDING, pady=PADDING)
                 row_buttons.append(btn)
             self.card_buttons.append(row_buttons)
-
 
     def build_end_screen(self):
         #Clears existing buttons, text, etc
@@ -177,6 +184,9 @@ class MatchMadness:
         # Game over screen
         title = tk.Label(self.game_frame, text="Game Over!", font=("Arial", 28, "bold"), bg="pink1", fg="deeppink4")
         title.pack(pady=30)
+        
+        # Sound effects
+        play_audio(applause_sound)
 
         # Winner
         winner_label = tk.Label(self.game_frame, text=winner_text, font=("Arial", 20), bg="pink1", fg="deeppink4")
@@ -211,6 +221,7 @@ class MatchMadness:
         self.start_game()
     
 
+    # Returns to main menu
     def go_to_menu(self):
         """Return to main menu"""
         self.game_frame.pack_forget()
@@ -254,7 +265,7 @@ class MatchMadness:
 
         #Keep cards face up (match)
         if path1 == path2:
-            playsound(happy_sound, block=False)
+            play_audio(happy_sound)
             self.matched_cards.append(idx1)
             self.matched_cards.append(idx2)
             
@@ -269,7 +280,7 @@ class MatchMadness:
         
         else:
             #No match, flip cards back, find buttons and reset them
-            playsound(sad_sound, block=False)
+            play_audio(sad_sound)
             for idx in self.flipped_cards:
                 row = idx // self.cols
                 col = idx % self.cols 
@@ -292,9 +303,6 @@ class MatchMadness:
     #Shows end game screen
     def end_game(self):
         self.build_end_screen()
-
-
-
 
 #Main menu
 class MenuFrame:
@@ -390,8 +398,6 @@ class MenuFrame:
         hard_btn.pack(pady=5)
         self.difficulty_buttons["Hard"] = hard_btn 
 
-
-
     #Shows rules in messagebox
     def show_rules(self):
         messagebox.showinfo("Rules",  "How to Play Match Madness:\n\n"
@@ -415,7 +421,6 @@ class MenuFrame:
         
         self.update_play_button()  #Checks if play button should turn green (both theme and difficulty are selected)
 
-
     #Selects a difficulty when difficulty button is clicked
     def select_difficulty(self, difficulty):
         self.game.selected_difficulty = difficulty
@@ -428,7 +433,6 @@ class MenuFrame:
                 btn.config(bg="PaleVioletRed")
         
         self.update_play_button() #Checks if play button should turn green
-
 
     #Turns play button green when both theme and difficulty are selected
     def update_play_button(self):
@@ -448,10 +452,6 @@ class MenuFrame:
             messagebox.showwarning("Missing theme", "Please select a theme")
         else:
             self.game.start_game()
-
-    
-# end screen
-    # end + winner screen
 
 if __name__ == "__main__":
     root = tk.Tk()
