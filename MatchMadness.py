@@ -13,7 +13,8 @@ import random
 from PIL import Image, ImageTk
 import os 
 import platform
-import playsound3 as playsound
+from pydub import AudioSegment
+from pydub.playback import play
 
 # grid size depending on difficulty of game
 DIFFICULTIES = {
@@ -42,7 +43,8 @@ def play_audio(file_path):
         os.system(f"afplay '{file_path}' &")
     # Windows
     elif platform.system() == "Windows": 
-        playsound.playsound(file_path, block=False)
+        file_path = AudioSegment.from_wav(file_path)
+        play(file_path)
 
 #Loads and resizes an image file into a Tkinter PhotoImage
 def load_photo(path, size=CARD_SIZE):
