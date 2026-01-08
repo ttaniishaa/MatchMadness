@@ -13,7 +13,7 @@ import random
 from PIL import Image, ImageTk
 import os 
 import platform
-# import winsound  # Removed - only import on Windows
+import winsound
 
 # grid size depending on difficulty of game
 DIFFICULTIES = {
@@ -35,12 +35,14 @@ happy_sound = "sound_effects/happy.wav"
 sad_sound = "sound_effects/sad.wav"
 applause_sound = "sound_effects/applause.wav"
 
+# Playing audio file based on platform
 def play_audio(file_path):
-    if platform.system() == "Darwin": # Mac
+    # Mac
+    if platform.system() == "Darwin": 
         os.system(f"afplay '{file_path}' &")
-    elif platform.system() == "Windows": # Windows
-        import winsound
-        winsound.PlaySound(file_path, winsound.SND_FILENAME | winsound.SND_ASYNC) # passing file quickly
+    # Windows
+    elif platform.system() == "Windows": 
+        winsound.PlaySound(file_path)
 
 #Loads and resizes an image file into a Tkinter PhotoImage
 def load_photo(path, size=CARD_SIZE):
