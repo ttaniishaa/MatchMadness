@@ -42,6 +42,7 @@ def play_audio(file_path):
         os.system(f"afplay '{file_path}' &")
     # Windows
     elif platform.system() == "Windows": 
+        winsound.SND_FILENAME = file_path
         winsound.PlaySound(winsound.SND_FILENAME , winsound.SND_ASYNC)
 
 #Loads and resizes an image file into a Tkinter PhotoImage
