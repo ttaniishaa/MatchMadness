@@ -13,7 +13,7 @@ import random
 from PIL import Image, ImageTk
 import os 
 import platform
-import playsound
+from playsound3 import playsound
 
 # grid size depending on difficulty of game
 DIFFICULTIES = {
