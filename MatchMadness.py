@@ -13,7 +13,7 @@ import random
 from PIL import Image, ImageTk
 import os 
 import platform
-from playsound3 import playsound
+import simpleaudio as sa
 
 # grid size depending on difficulty of game
 DIFFICULTIES = {
@@ -42,7 +42,9 @@ def play_audio(file_path):
         os.system(f"afplay '{file_path}' &")
     # Windows
     elif platform.system() == "Windows": 
-        playsound.playsound(file_path, block=False)
+        wave_obj = sa.WaveObject.from_wave_file(file_path)
+        play_obj = wave_obj.play(file_path) # play audio
+        play_obj.wait_done(file_path)  # Wait until sound has finished playing
 
 #Loads and resizes an image file into a Tkinter PhotoImage
 def load_photo(path, size=CARD_SIZE):
