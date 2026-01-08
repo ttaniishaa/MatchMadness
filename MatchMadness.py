@@ -1,7 +1,7 @@
 '''
 Card Memory Game 
 Authors: Tanisha Naser and Angela Xi
-Date: December 16th, 2025
+Date: January 8th, 2026
 
 Description: 
 This program implements a card memory game using Tkinter. 
