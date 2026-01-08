@@ -13,7 +13,7 @@ import random
 from PIL import Image, ImageTk
 import os 
 import platform
-import winsound
+import playsound
 
 # grid size depending on difficulty of game
 DIFFICULTIES = {
@@ -42,8 +42,7 @@ def play_audio(file_path):
         os.system(f"afplay '{file_path}' &")
     # Windows
     elif platform.system() == "Windows": 
-        winsound.SND_FILENAME = file_path
-        winsound.PlaySound(winsound.SND_FILENAME , winsound.SND_ASYNC)
+        playsound.playsound(file_path, block=False)
 
 #Loads and resizes an image file into a Tkinter PhotoImage
 def load_photo(path, size=CARD_SIZE):
@@ -435,10 +434,10 @@ class MenuFrame:
                 btn.config(bg="deeppink4")
             else:
                 btn.config(bg="PaleVioletRed")
-        
-        self.update_play_button() #Checks if play button should turn green
+        # Checks if play button should turn green
+        self.update_play_button() 
 
-    #Turns play button green when both theme and difficulty are selected
+    # Turns play button green when both theme and difficulty are selected
     def update_play_button(self):
         if self.game.selected_theme is not None and self.game.selected_difficulty is not None:
             self.play_btn.config(bg="PaleGreen3")
