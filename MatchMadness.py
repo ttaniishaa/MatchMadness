@@ -42,7 +42,7 @@ def play_audio(file_path):
         os.system(f"afplay '{file_path}' &")
     # Windows
     elif platform.system() == "Windows": 
-        winsound.PlaySound(file_path)
+        winsound.PlaySound(winsound.SND_FILENAME , winsound.SND_ASYNC)
 
 #Loads and resizes an image file into a Tkinter PhotoImage
 def load_photo(path, size=CARD_SIZE):
