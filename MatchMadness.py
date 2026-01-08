@@ -13,6 +13,7 @@ import random
 from PIL import Image, ImageTk
 import os 
 import platform
+import winsound
 
 # grid size depending on difficulty of game
 DIFFICULTIES = {
@@ -38,7 +39,6 @@ def play_audio(file_path):
     if platform.system() == "Darwin": # Mac
         os.system(f"afplay '{file_path}' &")
     elif platform.system() == "Windows": # Windows
-        import winsound
         winsound.PlaySound(file_path, winsound.SND_FILENAME | winsound.SND_ASYNC) # passing file quickly
 
 #Loads and resizes an image file into a Tkinter PhotoImage
