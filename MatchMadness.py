@@ -10,47 +10,31 @@ The player must match pairs of cards by remembering their positions.
 import tkinter as tk
 from tkinter import messagebox
 import random
-from PIL import Image, ImageTk
 import os 
-import platform
-import simpleaudio as sa
+
 
 # grid size depending on difficulty of game
 DIFFICULTIES = {
-"Easy": (3,4), #
+"Easy": (3,4), 
 "Medium": (4,4),
 "Hard": (5,6)
 }
 
-CARD_SIZE = (90,90)
 PADDING = 6 #Space between cards
 
-#Helper functions
-# Sound effects
-# Get the folder where your script is located
-# BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-# Define paths for your specific sounds
+#Define paths for sounds
 happy_sound = "sound_effects/happy.wav"
 sad_sound = "sound_effects/sad.wav"
 applause_sound = "sound_effects/applause.wav"
 
-# Playing audio file based on platform
-def play_audio(file_path):
-    # Mac
-    if platform.system() == "Darwin": 
-        os.system(f"afplay '{file_path}' &")
-    # Windows
-    elif platform.system() == "Windows": 
-        wave_obj = sa.WaveObject.from_wave_file(file_path)
-        play_obj = wave_obj.play(file_path) # play audio
-        play_obj.wait_done(file_path)  # Wait until sound has finished playing
 
-#Loads and resizes an image file into a Tkinter PhotoImage
-def load_photo(path, size=CARD_SIZE):
-    img = Image.open(path).convert("RGB")
-    img = img.resize(size, Image.Resampling.LANCZOS)
-    return ImageTk.PhotoImage(img)
+#Helper functions
+
+#Loads an image file into a Tkinter PhotoImage
+def load_photo(path):
+    return tk.PhotoImage(file=path)
+
 
 #Returns a list of full paths for images in cards folder
 def list_image_files(folder: str):
@@ -64,7 +48,8 @@ def list_image_files(folder: str):
 
 #Controls Match Madness Game 
 class MatchMadness:
-    # Window Setup
+
+    #Constructor
     def __init__(self, root):
         self.root = root
         self.root.title("Match Madness")
@@ -119,6 +104,7 @@ class MatchMadness:
         self.build_game_screen()
 
 
+    #Sets up the game board
     def build_game_screen(self):
         #Clears existing buttons, text, etc
         for widget in self.game_frame.winfo_children():
@@ -161,9 +147,10 @@ class MatchMadness:
         grid_frame.pack(side="right", expand=True, fill="both", padx=10, pady=10)
 
         self.card_buttons = []
-        for i in range(self.rows): # setting up rows from user input
+
+        for i in range(self.rows): #Setting up rows from user input
             row_buttons = []
-            for j in range(self.cols): # setting up columns from user input
+            for j in range(self.cols): #Setting up columns from user input
                 card_index = i * self.cols + j
                 btn = tk.Button(grid_frame, text="?", width=8, height=4, # unknown card
                     bg="PaleVioletRed", fg="white", font=("Arial", 12, "bold"),
@@ -173,6 +160,7 @@ class MatchMadness:
                 row_buttons.append(btn)
             self.card_buttons.append(row_buttons)
 
+    #Sets up ending/winner screen
     def build_end_screen(self):
         #Clears existing buttons, text, etc
         for widget in self.game_frame.winfo_children():
@@ -186,12 +174,8 @@ class MatchMadness:
         else:
             winner_text = "It's a Tie!"
 
-        # Game over screen
         title = tk.Label(self.game_frame, text="Game Over!", font=("Arial", 28, "bold"), bg="pink1", fg="deeppink4")
         title.pack(pady=30)
-        
-        # Sound effects
-        play_audio(applause_sound)
 
         # Winner
         winner_label = tk.Label(self.game_frame, text=winner_text, font=("Arial", 20), bg="pink1", fg="deeppink4")
@@ -270,7 +254,6 @@ class MatchMadness:
 
         #Keep cards face up (match)
         if path1 == path2:
-            play_audio(happy_sound)
             self.matched_cards.append(idx1)
             self.matched_cards.append(idx2)
             
@@ -285,7 +268,6 @@ class MatchMadness:
         
         else:
             #No match, flip cards back, find buttons and reset them
-            play_audio(sad_sound)
             for idx in self.flipped_cards:
                 row = idx // self.cols
                 col = idx % self.cols 
@@ -295,12 +277,16 @@ class MatchMadness:
                           activebackground="PaleVioletRed", activeforeground="white")
 
             #Switch player only on no match
-            self.current_player = 2 if self.current_player == 1 else 1 
+            if self.current_player == 1:
+                self.current_player = 2
+            else:
+                self.current_player = 1
             self.turn_label.config(text=f"Player {self.current_player}'s turn")
 
         #Clear flipped cards for next turn
         self.flipped_cards = []
 
+    #Refreshes score display
     def update_scores(self):
         self.p1_score_label.config(text=f"Player 1: {self.scores[1]}")
         self.p2_score_label.config(text=f"Player 2: {self.scores[2]}")
@@ -311,6 +297,8 @@ class MatchMadness:
 
 #Main menu
 class MenuFrame:
+
+    #Constructor
     def __init__(self, root, game):
         self.root = root
         self.game = game  #Lets menu frame access the game
@@ -390,7 +378,6 @@ class MenuFrame:
         # Difficulty buttons 
         self.difficulty_buttons = {} 
 
-        #Difficulty buttons
         easy_btn = tk.Button(right_frame, text="Easy", width=15, bg="PaleVioletRed", fg="white", command=lambda: self.select_difficulty("Easy"))
         easy_btn.pack(pady=5)
         self.difficulty_buttons["Easy"] = easy_btn
