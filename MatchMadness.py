@@ -10,10 +10,12 @@ The player must match pairs of cards by remembering their positions.
 import tkinter as tk
 from tkinter import messagebox
 import random
+import PIL
 from PIL import Image, ImageTk
 import os 
 import platform
-import simpleaudio as sa
+#from pydub import AudioSegment
+#from pydub.playback import play
 
 # grid size depending on difficulty of game
 DIFFICULTIES = {
@@ -42,9 +44,7 @@ def play_audio(file_path):
         os.system(f"afplay '{file_path}' &")
     # Windows
     elif platform.system() == "Windows": 
-        wave_obj = sa.WaveObject.from_wave_file(file_path)
-        play_obj = wave_obj.play(file_path) # play audio
-        play_obj.wait_done(file_path)  # Wait until sound has finished playing
+        play(file_path)
 
 #Loads and resizes an image file into a Tkinter PhotoImage
 def load_photo(path, size=CARD_SIZE):
