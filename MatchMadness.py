@@ -7,50 +7,27 @@ Description:
 This program implements a card memory game using Tkinter. 
 The player must match pairs of cards by remembering their positions.
 '''
+from time import time
 import tkinter as tk
 from tkinter import messagebox
 import random
-import PIL
-from PIL import Image, ImageTk
 import os 
-import platform
-#from pydub import AudioSegment
-#from pydub.playback import play
 
 # grid size depending on difficulty of game
 DIFFICULTIES = {
-"Easy": (3,4), #
+"Easy": (3,4), 
 "Medium": (4,4),
 "Hard": (5,6)
 }
 
-CARD_SIZE = (90,90)
-PADDING = 6 #Space between cards
+time_left = 180
 
-#Helper functions
-# Sound effects
-# Get the folder where your script is located
-# BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+PADDING = 6 # Space between cards
 
-# Define paths for your specific sounds
-happy_sound = "sound_effects/happy.wav"
-sad_sound = "sound_effects/sad.wav"
-applause_sound = "sound_effects/applause.wav"
-
-# Playing audio file based on platform
-def play_audio(file_path):
-    # Mac
-    if platform.system() == "Darwin": 
-        os.system(f"afplay '{file_path}' &")
-    # Windows
-    elif platform.system() == "Windows": 
-        play(file_path)
-
-#Loads and resizes an image file into a Tkinter PhotoImage
-def load_photo(path, size=CARD_SIZE):
-    img = Image.open(path).convert("RGB")
-    img = img.resize(size, Image.Resampling.LANCZOS)
-    return ImageTk.PhotoImage(img)
+#Helper function               
+#Loads an image file into a Tkinter PhotoImage
+def load_photo(path):
+    return tk.PhotoImage(file=path)
 
 #Returns a list of full paths for images in cards folder
 def list_image_files(folder: str):
@@ -64,19 +41,42 @@ def list_image_files(folder: str):
 
 #Controls Match Madness Game 
 class MatchMadness:
-    # Window Setup
+    #Constructor
     def __init__(self, root):
         self.root = root
         self.root.title("Match Madness")
-        self.root.geometry("800x600")
+        self.root.geometry("1200x900")
         self.root.config(bg="pink1")
         self.selected_difficulty = None 
         self.selected_theme = None  
-    
-    #Screens
+        self.selected_player = None
+        self.timer_label = None
+        
+        #Screens
         self.game_frame = tk.Frame(root)
-        self.menu = MenuFrame(root, self)
-
+        self.menu = MenuFrame(root, self, players=self.selected_player)
+    
+    def countdown(self):
+        global time_left
+        if time_left > 0:
+            time_left -= 1
+            mins, secs = divmod(time_left, 60)
+            timeFormat = '{:02d}:{:02d}'.format(mins, secs)
+            
+            if self.timer_label:
+                self.timer_label.config(text=f"Timer: {timeFormat}")
+                
+            # Call countdown again
+            self.root.after(1000, self.countdown)
+        else:
+            messagebox.showinfo(text="Time's up!")
+            self.end_game()
+                
+    # Timer function
+    def timer(self):
+        global time_left 
+        time_left = 180
+        self.countdown() 
 
     #Starts the game with selected difficulty and theme
     def start_game(self):
@@ -110,6 +110,12 @@ class MatchMadness:
             self.root.geometry("900x650")
         else: 
             self.root.geometry("1100x750")
+            
+        # determines if there is a timer for the game
+        if self.selected_player == "Solo":
+            self.timer()
+        elif self.selected_player == "Multiplayer":
+            pass
         
         # Hide menu & show game
         self.menu.menu_frame.pack_forget()
@@ -118,7 +124,9 @@ class MatchMadness:
 
         self.build_game_screen()
 
-
+    
+    
+    #Sets up the game board
     def build_game_screen(self):
         #Clears existing buttons, text, etc
         for widget in self.game_frame.winfo_children():
@@ -135,19 +143,32 @@ class MatchMadness:
         info_label = tk.Label(sidebar, text=f"Theme: {self.selected_theme} \nDifficulty: {self.selected_difficulty}", font = ("Arial", 10), bg="pink1", fg="deeppink4")
         info_label.pack(pady=5)
 
-        #Turn indicator
-        self.turn_label = tk.Label(sidebar, text="Player 1's turn", font=("Arial", 14, "bold"), bg="pink1", fg="deeppink4")
-        self.turn_label.pack(pady=15)
-
         #Scores (updated when match is found)
         scores_title = tk.Label(sidebar, text="Scores:", font=("Arial", 12, "bold"), bg="pink1", fg="deeppink4")
         scores_title.pack(pady=(10, 5))
         
-        self.p1_score_label = tk.Label(sidebar, text="Player 1: 0", font=("Arial", 12), bg="pink1", fg="deeppink4")
-        self.p1_score_label.pack(pady=2)
+        #Turn indicator
+        self.turn_label = tk.Label(sidebar, text="Player 1's turn", font=("Arial", 14, "bold"), bg="pink1", fg="deeppink4")
+        self.turn_label.pack(pady=15)
+            
+        # Set up game screen according to player count
+        if self.selected_player == "Multiplayer":    
+            # Multiplayer scores
+            self.p1_score_label = tk.Label(sidebar, text="Player 1: 0", font=("Arial", 12), bg="pink1", fg="deeppink4")
+            self.p1_score_label.pack(pady=2)
+                
+            self.p2_score_label = tk.Label(sidebar, text="Player 2: 0", font=("Arial", 12), bg="pink1", fg="deeppink4")
+            self.p2_score_label.pack(pady=2)
         
-        self.p2_score_label = tk.Label(sidebar, text="Player 2: 0", font=("Arial", 12), bg="pink1", fg="deeppink4")
-        self.p2_score_label.pack(pady=2)
+        # Set up game screen according to player count
+        elif self.selected_player == "Solo":
+            # Store reference for timer updates
+            self.timer_label = tk.Label(sidebar, text="Timer: 03:00", font=("Arial", 12), bg="pink1", fg="deeppink4")
+            self.timer_label.pack(pady=5)
+            
+            # Score count
+            self.p1_score_label = tk.Label(sidebar, text="Player 1: 0", font=("Arial", 12), bg="pink1", fg="deeppink4")
+            self.p1_score_label.pack(pady=2)
 
         #Rules and quit buttons
         rules_btn = tk.Button(sidebar, text="Rules", width=12,bg="PaleVioletRed", fg="white", command=self.menu.show_rules)
@@ -158,12 +179,13 @@ class MatchMadness:
 
         #Card grid 
         grid_frame = tk.Frame(self.game_frame, bg="pink1")
-        grid_frame.pack(side="right", expand=True, fill="both", padx=10, pady=10)
+        grid_frame.pack(side="right", expand=True, fill="both", padx=5, pady=5)
 
         self.card_buttons = []
-        for i in range(self.rows): # setting up rows from user input
+
+        for i in range(self.rows): #Setting up rows from user input
             row_buttons = []
-            for j in range(self.cols): # setting up columns from user input
+            for j in range(self.cols): #Setting up columns from user input
                 card_index = i * self.cols + j
                 btn = tk.Button(grid_frame, text="?", width=8, height=4, # unknown card
                     bg="PaleVioletRed", fg="white", font=("Arial", 12, "bold"),
@@ -173,6 +195,7 @@ class MatchMadness:
                 row_buttons.append(btn)
             self.card_buttons.append(row_buttons)
 
+    #Sets up ending/winner screen
     def build_end_screen(self):
         #Clears existing buttons, text, etc
         for widget in self.game_frame.winfo_children():
@@ -186,20 +209,20 @@ class MatchMadness:
         else:
             winner_text = "It's a Tie!"
 
-        # Game over screen
         title = tk.Label(self.game_frame, text="Game Over!", font=("Arial", 28, "bold"), bg="pink1", fg="deeppink4")
         title.pack(pady=30)
-        
-        # Sound effects
-        play_audio(applause_sound)
 
         # Winner
         winner_label = tk.Label(self.game_frame, text=winner_text, font=("Arial", 20), bg="pink1", fg="deeppink4")
         winner_label.pack(pady=10)
         
         # Final scores
-        scores_label = tk.Label(self.game_frame, text=f"Final Scores:\nPlayer 1: {self.scores[1]}\nPlayer 2: {self.scores[2]}", 
-                               font=("Arial", 14), bg="pink1", fg="deeppink4")
+        if self.selected_player == "Solo":
+            scores_label = tk.Label(self.game_frame, text=f"Final Score:\nPlayer 1: {self.scores[1]}", 
+                                   font=("Arial", 14), bg="pink1", fg="deeppink4")
+        else:
+            scores_label = tk.Label(self.game_frame, text=f"Final Scores:\nPlayer 1: {self.scores[1]}\nPlayer 2: {self.scores[2]}", 
+                                font=("Arial", 14), bg="pink1", fg="deeppink4")
         scores_label.pack(pady=20)
         
         # Buttons frame
@@ -230,7 +253,7 @@ class MatchMadness:
     def go_to_menu(self):
         """Return to main menu"""
         self.game_frame.pack_forget()
-        self.root.geometry("800x600")  # Reset window size
+        self.root.geometry("1200x900")  # Reset window size
         self.menu.menu_frame.pack(fill="both", expand=True)
 
     #Flips a card when clicked if requirements are met
@@ -270,7 +293,6 @@ class MatchMadness:
 
         #Keep cards face up (match)
         if path1 == path2:
-            play_audio(happy_sound)
             self.matched_cards.append(idx1)
             self.matched_cards.append(idx2)
             
@@ -285,7 +307,6 @@ class MatchMadness:
         
         else:
             #No match, flip cards back, find buttons and reset them
-            play_audio(sad_sound)
             for idx in self.flipped_cards:
                 row = idx // self.cols
                 col = idx % self.cols 
@@ -295,15 +316,26 @@ class MatchMadness:
                           activebackground="PaleVioletRed", activeforeground="white")
 
             #Switch player only on no match
-            self.current_player = 2 if self.current_player == 1 else 1 
-            self.turn_label.config(text=f"Player {self.current_player}'s turn")
+            if self.selected_player == "Multiplayer":
+                if self.current_player == 1:
+                    self.current_player = 2
+                else:
+                    self.current_player = 1
+                self.turn_label.config(text=f"Player {self.current_player}'s turn")
+            elif self.selected_player == "Solo":
+                self.current_player = 1  # Always player 1 in solo mode
+                self.turn_label = None
 
         #Clear flipped cards for next turn
         self.flipped_cards = []
 
+    #Refreshes score display
     def update_scores(self):
-        self.p1_score_label.config(text=f"Player 1: {self.scores[1]}")
-        self.p2_score_label.config(text=f"Player 2: {self.scores[2]}")
+        if self.selected_player == "Multiplayer":
+            self.p1_score_label.config(text=f"Player 1: {self.scores[1]}")
+            self.p2_score_label.config(text=f"Player 2: {self.scores[2]}")
+        elif self.selected_player == "Solo":
+            self.p1_score_label.config(text=f"Player 1: {self.scores[1]}")
 
     #Shows end game screen
     def end_game(self):
@@ -311,7 +343,9 @@ class MatchMadness:
 
 #Main menu
 class MenuFrame:
-    def __init__(self, root, game):
+
+    #Constructor
+    def __init__(self, root, game, players):
         self.root = root
         self.game = game  #Lets menu frame access the game
         self.menu_frame = tk.Frame(root, bg="pink1")
@@ -327,8 +361,9 @@ class MenuFrame:
         
         #Configure columns to have equal width
         columns_frame.columnconfigure(0, weight=1)  # Left column
-        columns_frame.columnconfigure(1, weight=1)  # Middle column
-        columns_frame.columnconfigure(2, weight=1)  # Right column
+        columns_frame.columnconfigure(1, weight=1)  # Middle left column
+        columns_frame.columnconfigure(2, weight=1)  # Middle right column
+        columns_frame.columnconfigure(3, weight=1)  # Right column
         columns_frame.rowconfigure(0, weight=1)
         
         #Left column: quit, rules, play buttons
@@ -380,9 +415,26 @@ class MenuFrame:
         animals_btn.pack(pady=5)
         self.theme_buttons["Animals"] = animals_btn
         
+        # Player mode selection
+        self.player_button = {}
+        
+        middle_frame = tk.Frame(columns_frame, bg="pink1")
+        middle_frame.grid(row=0, column=2, sticky="n", pady=50)
+
+        player_label = tk.Label(middle_frame, text="Select Player Count:", font=("Arial", 14), bg="pink1", fg="deeppink4")
+        player_label.pack(pady=10)
+        
+        solo_btn = tk.Button(middle_frame, text="Solo", width=15, bg="PaleVioletRed", fg="white", command=lambda: self.selected_player("Solo"))
+        solo_btn.pack(pady=5)
+        self.player_button["Solo"] = solo_btn
+
+        multi_btn = tk.Button(middle_frame, text="Multiplayer", width=15, bg="PaleVioletRed", fg="white", command=lambda: self.selected_player("Multiplayer"))
+        multi_btn.pack(pady=5)
+        self.player_button["Multiplayer"] = multi_btn
+        
         #Right column: difficulty selection
         right_frame = tk.Frame(columns_frame, bg="pink1")
-        right_frame.grid(row=0, column=2, sticky="n", pady=50)
+        right_frame.grid(row=0, column=3, sticky="n", pady=50)
         
         diff_label = tk.Label(right_frame, text="Select Difficulty:", font=("Arial", 14), bg="pink1", fg="deeppink4")
         diff_label.pack(pady=10)
@@ -390,7 +442,6 @@ class MenuFrame:
         # Difficulty buttons 
         self.difficulty_buttons = {} 
 
-        #Difficulty buttons
         easy_btn = tk.Button(right_frame, text="Easy", width=15, bg="PaleVioletRed", fg="white", command=lambda: self.select_difficulty("Easy"))
         easy_btn.pack(pady=5)
         self.difficulty_buttons["Easy"] = easy_btn
@@ -402,7 +453,9 @@ class MenuFrame:
         hard_btn = tk.Button(right_frame, text="Hard", width=15, bg="PaleVioletRed", fg="white", command=lambda: self.select_difficulty("Hard"))
         hard_btn.pack(pady=5)
         self.difficulty_buttons["Hard"] = hard_btn 
-
+        
+        
+        
     #Shows rules in messagebox
     def show_rules(self):
         messagebox.showinfo("Rules",  "How to Play Match Madness:\n\n"
@@ -439,13 +492,22 @@ class MenuFrame:
         # Checks if play button should turn green
         self.update_play_button() 
 
+    def selected_player(self, player):
+        self.game.selected_player = player
+
+        # Update button colors
+        for player_name, btn in self.player_button.items():
+            if player_name == player:
+                btn.config(bg="deeppink4")
+            else:
+                btn.config(bg="PaleVioletRed")
+                
     # Turns play button green when both theme and difficulty are selected
     def update_play_button(self):
-        if self.game.selected_theme is not None and self.game.selected_difficulty is not None:
+        if self.game.selected_theme is not None and self.game.selected_difficulty is not None and self.game.selected_player is not None:
             self.play_btn.config(bg="PaleGreen3")
         else:
             self.play_btn.config(bg="PaleVioletRed")
-
 
     # Starting the game, check for missing inputs
     def play_game(self):
@@ -455,6 +517,8 @@ class MenuFrame:
             messagebox.showwarning("Missing difficulty", "Please select a difficulty level")
         elif self.game.selected_theme is None:
             messagebox.showwarning("Missing theme", "Please select a theme")
+        elif self.game.selected_player is None:
+            messagebox.showwarning("Missing player count", "Please select a player count")
         else:
             self.game.start_game()
 
