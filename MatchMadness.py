@@ -1,7 +1,7 @@
 '''
 Card Memory Game 
 Authors: Tanisha Naser and Angela Xi
-Date: January 8th, 2026
+Date: January 13th, 2026
 
 Description: 
 This program implements a card memory game using Tkinter. 
@@ -59,9 +59,9 @@ class MatchMadness:
     def countdown(self):
         global time_left
         if time_left > 0:
-            time_left -= 1
+            time_left -= 1 # decrease time by 1 second if time is left
             mins, secs = divmod(time_left, 60)
-            timeFormat = '{:02d}:{:02d}'.format(mins, secs)
+            timeFormat = '{:02d}:{:02d}'.format(mins, secs) # format the time according to the seconds
             
             if self.timer_label:
                 self.timer_label.config(text=f"Timer: {timeFormat}")
@@ -69,7 +69,7 @@ class MatchMadness:
             # Call countdown again
             self.root.after(1000, self.countdown)
         else:
-            messagebox.showinfo(text="Time's up!")
+            messagebox.showinfo(text="Time's up!") # when time runs out
             self.end_game()
                 
     # Timer function
@@ -272,8 +272,7 @@ class MatchMadness:
 
             #Show image
             btn = self.card_buttons[row][col]
-            btn.config(image=self.card_images[index], text="", width=90, height=90,
-                      activebackground="pink1")
+            btn.config(image=self.card_images[index], text="", width=90, height=90,activebackground="pink1")
 
             #Add to flipped cards
             self.flipped_cards.append(index)
