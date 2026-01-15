@@ -45,7 +45,7 @@ class MatchMadness:
     def __init__(self, root):
         self.root = root
         self.root.title("Match Madness")
-        self.root.geometry("1200x900")
+        self.root.geometry("800x600")
         self.root.config(bg="pink1")
         self.selected_difficulty = None 
         self.selected_theme = None  
@@ -68,9 +68,9 @@ class MatchMadness:
                 
             # Call countdown again
             self.root.after(1000, self.countdown)
-        else:
-            messagebox.showinfo(text="Time's up!") # when time runs out
+        else: # when time runs out
             self.end_game()
+            return
                 
     # Timer function
     def timer(self):
@@ -146,10 +146,6 @@ class MatchMadness:
         #Scores (updated when match is found)
         scores_title = tk.Label(sidebar, text="Scores:", font=("Arial", 12, "bold"), bg="pink1", fg="deeppink4")
         scores_title.pack(pady=(10, 5))
-        
-        #Turn indicator
-        self.turn_label = tk.Label(sidebar, text="Player 1's turn", font=("Arial", 14, "bold"), bg="pink1", fg="deeppink4")
-        self.turn_label.pack(pady=15)
             
         # Set up game screen according to player count
         if self.selected_player == "Multiplayer":    
@@ -170,6 +166,10 @@ class MatchMadness:
             self.p1_score_label = tk.Label(sidebar, text="Player 1: 0", font=("Arial", 12), bg="pink1", fg="deeppink4")
             self.p1_score_label.pack(pady=2)
 
+        #Turn indicator
+        self.turn_label = tk.Label(sidebar, text="Player 1's turn", font=("Arial", 14, "bold"), bg="pink1", fg="deeppink4")
+        self.turn_label.pack(pady=15)
+        
         #Rules and quit buttons
         rules_btn = tk.Button(sidebar, text="Rules", width=12,bg="PaleVioletRed", fg="white", command=self.menu.show_rules)
         rules_btn.pack(pady=10)
@@ -253,7 +253,7 @@ class MatchMadness:
     def go_to_menu(self):
         """Return to main menu"""
         self.game_frame.pack_forget()
-        self.root.geometry("1200x900")  # Reset window size
+        self.root.geometry("800x600")  # Reset window size
         self.menu.menu_frame.pack(fill="both", expand=True)
 
     #Flips a card when clicked if requirements are met
