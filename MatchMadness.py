@@ -338,7 +338,7 @@ class MatchMadness:
 
     #Checks if 2 flipped cards are a match
     def check_match(self):
-        #Exit if timer already ended the game (Solo mode only)
+        #Exit if timer already ended the game in solo mode due to 0.6 second delay in check match
         if self.selected_player == "Solo" and not self.timer_running:
             return
 
@@ -385,8 +385,8 @@ class MatchMadness:
                         fg=PLAYER_TURN_COLOURS.get(self.current_player, "black"),
                     )
             elif self.selected_player == "Solo":
-                self.current_player = 1  # Always player 1 in solo mode
-                # Turn label is already None in solo mode
+                self.current_player = 1  #Always player 1 in solo mode
+                #No turn label to update in solo mode
 
         #Clear flipped cards for next turn
         self.flipped_cards = []
@@ -413,11 +413,11 @@ class MenuFrame:
         self.menu_frame = tk.Frame(root, bg="peach puff")
         self.menu_frame.pack(fill="both", expand=True)
         
-        # Title at top
+        #Title at top
         title_label = tk.Label(self.menu_frame, text="Match Madness", font=("Times New Roman", 32, "bold"), bg="peach puff", fg="lightsalmon3")
         title_label.pack(pady=10, anchor="n")
         
-        # Container for the three columns
+        #Container for the three columns
         columns_frame = tk.Frame(self.menu_frame, bg="peach puff")
         columns_frame.pack(expand=True, fill="both")
         
@@ -454,30 +454,30 @@ class MenuFrame:
         #Theme buttons 
         self.theme_buttons = {}
 
-        # Food
+        #Food
         food_btn = tk.Button(middle_frame, text="Food", width=15, bg="lightsalmon2", fg="white",
                             command=lambda: self.select_theme("Food"))
         food_btn.pack(pady=5)
         self.theme_buttons["Food"] = food_btn
 
-        # Nature
+        #Nature
         nature_btn = tk.Button(middle_frame, text="Nature", width=15, bg="lightsalmon2", fg="white",
                               command=lambda: self.select_theme("Nature"))
         nature_btn.pack(pady=5)
         self.theme_buttons["Nature"] = nature_btn
 
-        # Flags
+        #Flags
         flags_btn = tk.Button(middle_frame, text="Flags", width=15, bg="lightsalmon2", fg="white",
                             command=lambda: self.select_theme("Flags"))
         flags_btn.pack(pady=5)
         self.theme_buttons["Flags"] = flags_btn
-        # Animals
+        #Animals
         animals_btn = tk.Button(middle_frame, text="Animals", width=15, bg="lightsalmon2", fg="white",
                             command=lambda: self.select_theme("Animals"))
         animals_btn.pack(pady=5)
         self.theme_buttons["Animals"] = animals_btn
         
-        # Player mode selection
+        #Player mode selection
         self.player_button = {}
         
         middle_frame = tk.Frame(columns_frame, bg="peach puff")
@@ -501,7 +501,7 @@ class MenuFrame:
         diff_label = tk.Label(right_frame, text="Select Difficulty:", font=("Arial", 14), bg="peach puff", fg="lightsalmon3")
         diff_label.pack(pady=10)
         
-        # Difficulty buttons 
+        #Difficulty buttons 
         self.difficulty_buttons = {} 
 
         easy_btn = tk.Button(right_frame, text="Easy", width=15, bg="lightsalmon2", fg="white", command=lambda: self.select_difficulty("Easy"))
@@ -521,7 +521,7 @@ class MenuFrame:
     #Shows rules in messagebox
     def show_rules(self):
         messagebox.showinfo("Rules",  "How to Play Match Madness:\n\n"
-    "SOLO MODE (Timer):\n"
+    "SOLO MODE (Timed):\n"
     "1. Click on a card to flip it\n"
     "2. Click on another card to find a match\n"
     "3. If the cards match, they stay flipped and you get a point\n"
@@ -540,49 +540,48 @@ class MenuFrame:
     def select_theme(self, theme):
         self.game.selected_theme = theme
         
-        # Updates button colors (highlight selected, unhighlight others)
+        #Updates button colors (highlight selected, unhighlight others)
         for theme_name, btn in self.theme_buttons.items():
             if theme_name == theme:
                 btn.config(bg="lightsalmon3")
             else:
                 btn.config(bg="lightsalmon2")  
         
-        self.update_play_button()  #Checks if play button should turn green (both theme and difficulty are selected)
+        self.update_play_button()  #Checks if play button should turn green (theme, player count, and difficulty are selected)
 
     #Selects a difficulty when difficulty button is clicked
     def select_difficulty(self, difficulty):
         self.game.selected_difficulty = difficulty
 
-        # Update button colors
+        #Update button colors
         for diff_name, btn in self.difficulty_buttons.items():
             if diff_name == difficulty:
                 btn.config(bg="lightsalmon3")
             else:
                 btn.config(bg="lightsalmon2")
-        # Checks if play button should turn green
+
         self.update_play_button() 
 
     def selected_player(self, player):
         self.game.selected_player = player
 
-        # Update button colors
+        #Update button colors
         for player_name, btn in self.player_button.items():
             if player_name == player:
                 btn.config(bg="lightsalmon3")
             else:
                 btn.config(bg="lightsalmon2")
         
-        # Check if play button should turn green
         self.update_play_button()
                 
-    # Turns play button green when both theme and difficulty are selected
+    #Turns play button green when theme, player count, and difficulty are selected
     def update_play_button(self):
         if self.game.selected_theme is not None and self.game.selected_difficulty is not None and self.game.selected_player is not None:
             self.play_btn.config(bg="PaleGreen3")
         else:
             self.play_btn.config(bg="lightsalmon2")
 
-    # Starting the game, check for missing inputs
+    #Starting the game, checks for missing inputs
     def play_game(self):
         if self.game.selected_difficulty is None and self.game.selected_theme is None:
             messagebox.showwarning("Missing selections", "Please select a theme and difficulty level")
@@ -595,7 +594,8 @@ class MenuFrame:
         else:
             self.game.start_game()
 
+#Main 
 if __name__ == "__main__":
     root = tk.Tk()
     game = MatchMadness(root)
-    root.mainloop()
+    root.mainloop() 
