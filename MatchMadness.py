@@ -5,33 +5,38 @@ Date: January 13th, 2026
 
 Description: 
 This program implements a card memory game using Tkinter. 
-The player must match pairs of cards by remembering their positions.
+The player(s) can choose to play multiplayer(2 people), or solo.
+In a multiplayer game, players take turn flipping cards to find matches. Each match found is a point. The player with the most points wins.
+In a solo game, the player will try to flip as many cards as possible within the time limit (3 minutes). The game ends either when the timer finishes or when all cards are matched. 
 '''
+
 import tkinter as tk
 from tkinter import messagebox
 import random
 import os 
 
-#Constants
 
-# grid size depending on difficulty of game
+#Constant variables
+
+#Grid size depending on difficulty of game
 DIFFICULTIES = {
 "Easy": (3,4), 
 "Medium": (4,4),
 "Hard": (5,6)
 }
 
-PADDING = 6 # Space between cards
+#Space between cards
+PADDING = 6 
 
-# Turn indicator colours (multiplayer)
+#Turn label colours for multiplayer
 PLAYER_TURN_COLOURS = {
-    1: "pale violet red",   # Player 1 = pink
-    2: "steelblue3", # Player 2 = blue
+    1: "pale violet red",   #Player 1 = pink
+    2: "steelblue3", #Player 2 = blue
 }
+
 
 #Timer for solo mode
 time_left = 180 
-
 
 
 #Helper functions
@@ -62,32 +67,33 @@ class MatchMadness:
         self.selected_theme = None  
         self.selected_player = None
         self.timer_label = None
-        self.timer_running = False  # Track if timer is running
-        self.game_completed = False  # Track if game was completed (vs time out)
+        self.timer_running = False  #Tracks if timer is running
+        self.game_completed = False  #Tracks if game was completed (vs time out)
         
         #Screens
         self.game_frame = tk.Frame(root)
         self.menu = MenuFrame(root, self, players=self.selected_player)
     
+    #Updates the timer display every second and ends the game when time runs out
     def countdown(self):
         global time_left
         if self.timer_running and time_left > 0:
-            time_left -= 1 # decrease time by 1 second if time is left
+            time_left -= 1 #decrease time by 1 second if time is left
             mins, secs = divmod(time_left, 60)
-            timeFormat = '{:02d}:{:02d}'.format(mins, secs) # format the time according to the seconds
+            timeFormat = '{:02d}:{:02d}'.format(mins, secs) #format the time according to the seconds
             
             if self.timer_label:
                 self.timer_label.config(text=f"Timer: {timeFormat}")
                 
-            # Call countdown again
+            #Call countdown again
             self.root.after(1000, self.countdown)
-        elif time_left <= 0: # when time runs out
+        elif time_left <= 0: #when time runs out
             self.timer_running = False
-            self.game_completed = False  # Time ran out
+            self.game_completed = False  #Time ran out
             self.end_game()
             return
                 
-    # Timer function
+    #Timer function
     def timer(self):
         global time_left 
         time_left = 180
@@ -119,7 +125,7 @@ class MatchMadness:
         self.flipped_cards = []
         self.matched_cards = [] 
         
-        # Resize window based on difficulty to avoid cards being cut off 
+        #Resizes window based on difficulty to avoid cards being cut off 
         if self.selected_difficulty == "Easy":
             self.root.geometry("800x550")
         elif self.selected_difficulty == "Medium":
@@ -127,25 +133,23 @@ class MatchMadness:
         else: 
             self.root.geometry("1100x750")
         
-        # Hide menu & show game
+        #Hide menu & show game
         self.menu.menu_frame.pack_forget()
         self.game_frame.config(bg="peach puff")
         self.game_frame.pack(expand=True, fill="both")
 
-        # Build game screen first (creates timer_label if needed)
+        #Build game screen first
         self.build_game_screen()
         
-        # Start timer after game screen is built (so timer_label exists)
+        #Starts timer only for solo mode
         if self.selected_player == "Solo":
             self.timer()
-        elif self.selected_player == "Multiplayer":
-            pass
 
     
     
     #Sets up the game board
     def build_game_screen(self):
-        #Clears existing buttons, text, etc
+        #Clears existing buttons, text, etc from the game frame
         for widget in self.game_frame.winfo_children():
             widget.destroy() 
         
@@ -160,30 +164,30 @@ class MatchMadness:
         info_label = tk.Label(sidebar, text=f"Theme: {self.selected_theme} \nDifficulty: {self.selected_difficulty}", font = ("Arial", 10), bg="peach puff", fg="lightsalmon3")
         info_label.pack(pady=5)
 
-        #Scores (updated when match is found)
+        #Scores
         scores_title = tk.Label(sidebar, text="Scores:", font=("Arial", 12, "bold"), bg="peach puff", fg="lightsalmon3")
         scores_title.pack(pady=(10, 5))
             
-        # Set up game screen according to player count
+        #Set up game screen according to player count
         if self.selected_player == "Multiplayer":    
-            # Multiplayer scores
+            #Multiplayer scores
             self.p1_score_label = tk.Label(sidebar, text="Player 1: 0", font=("Arial", 12), bg="peach puff", fg="lightsalmon3")
             self.p1_score_label.pack(pady=2)
                 
             self.p2_score_label = tk.Label(sidebar, text="Player 2: 0", font=("Arial", 12), bg="peach puff", fg="lightsalmon3")
             self.p2_score_label.pack(pady=2)
         
-        # Set up game screen according to player count
+        #Solo timer
         elif self.selected_player == "Solo":
             # Store reference for timer updates
             self.timer_label = tk.Label(sidebar, text="Timer: 03:00", font=("Arial", 12), bg="peach puff", fg="lightsalmon3")
             self.timer_label.pack(pady=5)
             
-            # Score count
+            #solo score/match count 
             self.p1_score_label = tk.Label(sidebar, text="Pairs Matched: 0", font=("Arial", 12), bg="peach puff", fg="lightsalmon3")
             self.p1_score_label.pack(pady=2)
 
-        #Turn indicator (only show in multiplayer mode)
+        #Turn indicator for multiplayer
         if self.selected_player == "Multiplayer":
             self.turn_label = tk.Label(
                 sidebar,
@@ -213,7 +217,7 @@ class MatchMadness:
             row_buttons = []
             for j in range(self.cols): #Setting up columns from user input
                 card_index = i * self.cols + j
-                btn = tk.Button(grid_frame, text="?", width=8, height=4, # unknown card
+                btn = tk.Button(grid_frame, text="?", width=8, height=4,
                     bg="lightsalmon2", fg="white", font=("Arial", 12, "bold"),
                     activebackground="lightsalmon2", activeforeground="white",
                     command=lambda idx=card_index, r=i, c=j: self.flip_card(idx, r, c))
@@ -227,17 +231,16 @@ class MatchMadness:
         for widget in self.game_frame.winfo_children():
             widget.destroy() 
 
-        # Keep end screen consistent with the menu/game palette
         self.game_frame.config(bg="peach puff")
 
-        # Stop timer if running
+        #Stop timer if running
         self.timer_running = False
 
         #Determine winner/end message based on mode
         if self.selected_player == "Solo":
             if self.game_completed:
                 winner_text = "Congratulations!"
-                # Calculate time taken (180 - time_left)
+                #Calculate time taken (180 - time_left)
                 global time_left
                 time_taken = 180 - time_left
                 mins, secs = divmod(time_taken, 60)
@@ -247,7 +250,7 @@ class MatchMadness:
                 winner_text = "Time's Up!"
                 result_text = f"Pairs Matched: {self.scores[1]}"
         else:
-            # Multiplayer mode
+            #Multiplayer mode
             if self.scores[1] > self.scores[2]:
                 winner_text = "Player 1 Wins!"
             elif self.scores[2] > self.scores[1]:
@@ -263,26 +266,26 @@ class MatchMadness:
         winner_label = tk.Label(self.game_frame, text=winner_text, font=("Arial", 20), bg="peach puff", fg="lightsalmon3")
         winner_label.pack(pady=10)
         
-        # Final scores/time
+        #Final scores/time
         scores_label = tk.Label(self.game_frame, text=result_text, 
                                font=("Arial", 14), bg="peach puff", fg="lightsalmon3")
         scores_label.pack(pady=20)
         
-        # Buttons frame
+        #Buttons frame
         btn_frame = tk.Frame(self.game_frame, bg="peach puff")
         btn_frame.pack(pady=20)
         
-        # Play Again button
+        #Play again button
         play_again_btn = tk.Button(btn_frame, text="Play Again", width=12, bg="PaleGreen3", fg="white",
                                    command=self.play_again)
         play_again_btn.pack(side="left", padx=10)
         
-        # Main Menu button
+        #Main menu button
         menu_btn = tk.Button(btn_frame, text="Main Menu", width=12, bg="lightsalmon2", fg="white",
                             command=self.go_to_menu)
         menu_btn.pack(side="left", padx=10)
         
-        # Quit button
+        #Quit button
         quit_btn = tk.Button(btn_frame, text="Quit", width=12, bg="indian red", fg="white",
                             command=self.root.destroy)
         quit_btn.pack(side="left", padx=10)
@@ -290,21 +293,21 @@ class MatchMadness:
     #Starts a new game with same settings
     def play_again(self):
         global time_left
-        time_left = 180  # Reset timer
+        time_left = 180  #Reset timer
         self.timer_running = False
         self.game_completed = False
         self.start_game()
     
 
-    # Returns to main menu
+    #Returns to main menu
     def go_to_menu(self):
         """Return to main menu"""
         global time_left
-        self.timer_running = False  # Stop timer
-        time_left = 180  # Reset timer
+        self.timer_running = False  #Stop timer
+        time_left = 180  #Reset timer
         self.game_completed = False
         self.game_frame.pack_forget()
-        self.root.geometry("800x600")  # Reset window size
+        self.root.geometry("800x600")  #Reset window size
         self.menu.menu_frame.pack(fill="both", expand=True)
 
     #Flips a card when clicked if requirements are met
@@ -335,8 +338,7 @@ class MatchMadness:
 
     #Checks if 2 flipped cards are a match
     def check_match(self):
-        # Solo mode uses a timer. If time ran out, the end screen is already shown.
-        # `check_match` can still run because it was scheduled via `after(1000, ...)`.
+        #Exit if timer already ended the game (Solo mode only)
         if self.selected_player == "Solo" and not self.timer_running:
             return
 
